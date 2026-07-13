@@ -1,0 +1,1 @@
+import{n as e}from"./index-CAjHJTzc.js";var t=e();function n(e,n){let[r,i]=(0,t.useState)(()=>{try{let t=window.localStorage.getItem(e);return t?JSON.parse(t):n}catch(e){return console.error(e),n}});return(0,t.useEffect)(()=>{try{window.localStorage.setItem(e,JSON.stringify(r))}catch(e){console.error(e)}},[e,r]),[r,i]}export{n as t};
