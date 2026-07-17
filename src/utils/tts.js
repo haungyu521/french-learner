@@ -1,7 +1,7 @@
 /**
  * TTS 语音工具 - 多源容错版
- * 优先级：百度TTS → 有道词典 → Netlify代理 → Web Speech API
- * 法语/英语均支持，国内直连无需VPN
+ * 优先级：Netlify代理(无CORS) → 百度TTS → 有道词典 → Google TTS → Web Speech API
+ * 法语/英语/韩语均支持
  */
 
 let currentAudio = null;
@@ -14,7 +14,14 @@ function getCacheKey(text, lang) {
   return `${lang}:${text.substring(0, 100)}`;
 }
 
-// 百度翻译TTS（主源）
+// Netlify函数代理（首选 - 无CORS问题，支持所有语言）
+function getProxyUrl(text, lang) {
+  const langMap = { 'fr-FR': 'fr', 'en-US': 'en', 'ko-KR': 'ko' };
+  const langCode = langMap[lang] || 'en';
+  return `/.netlify/functions/tts?text=${encodeURIComponent(text.substring(0, 200))}&lang=${langCode}`;
+}
+
+// 百度翻译TTS（备用源 - 可能受CORS限制）
 function getBaiduUrl(text, lang) {
   const langMap = { 'fr-FR': 'fr', 'en-US': 'en', 'ko-KR': 'kor' };
   const langCode = langMap[lang] || 'en';
@@ -22,7 +29,7 @@ function getBaiduUrl(text, lang) {
   return `https://fanyi.baidu.com/gettts?lan=${langCode}&text=${encodeURIComponent(truncated)}&spd=4&source=web`;
 }
 
-// 有道词典TTS（备用源）
+// 有道词典TTS（备用源 - 可能受CORS限制）
 function getYoudaoUrl(text, lang) {
   const truncated = text.substring(0, 100);
   const typeMap = { 'fr-FR': '2', 'en-US': '1', 'ko-KR': '3' };
@@ -30,41 +37,51 @@ function getYoudaoUrl(text, lang) {
   return `https://dict.youdao.com/dictvoice?audio=${encodeURIComponent(truncated)}&type=${type}`;
 }
 
-// Netlify函数代理（第三备用）
-function getProxyUrl(text, lang) {
+// Google翻译TTS（备用源 - 可能受CORS限制）
+function getGoogleUrl(text, lang) {
   const langMap = { 'fr-FR': 'fr', 'en-US': 'en', 'ko-KR': 'ko' };
   const langCode = langMap[lang] || 'en';
-  return `/.netlify/functions/tts?text=${encodeURIComponent(text.substring(0, 200))}&lang=${langCode}`;
+  return `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(text.substring(0, 200))}&tl=${langCode}&client=tw-ob`;
 }
 
 // Web Speech API（最终兜底）
 function speakWithWebSpeech(text, lang, rate) {
   if (!window.speechSynthesis) return false;
-  
+
   try {
     window.speechSynthesis.cancel();
-    
+
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = lang;
     utterance.rate = rate || 0.9;
     utterance.volume = 1;
-    
-    // iOS Safari 兼容
+
+    // 尝试匹配最佳语音
+    const voices = window.speechSynthesis.getVoices();
+    if (voices.length > 0) {
+      const langPrefix = lang.split('-')[0]; // fr, en, ko
+      const match = voices.find(v => v.lang.startsWith(langPrefix)) ||
+                    voices.find(v => v.lang.startsWith(lang));
+      if (match) utterance.voice = match;
+    }
+
     utterance.onend = () => {};
     utterance.onerror = () => {};
-    
+
+    // 延迟启动以兼容某些浏览器
     setTimeout(() => {
       window.speechSynthesis.speak(utterance);
-      // iOS workaround
+      // iOS Safari workaround
       setTimeout(() => {
         if (window.speechSynthesis.speaking) {
           window.speechSynthesis.resume();
         }
       }, 100);
     }, 50);
-    
+
     return true;
   } catch (e) {
+    console.warn('Web Speech API failed:', e.message);
     return false;
   }
 }
@@ -72,7 +89,7 @@ function speakWithWebSpeech(text, lang, rate) {
 // 带多源容错的音频播放
 function playWithFallback(text, lang, rate) {
   if (!text || !text.trim()) return;
-  
+
   // 停止当前所有音频播放
   if (currentAudio) {
     currentAudio.pause();
@@ -83,30 +100,38 @@ function playWithFallback(text, lang, rate) {
   if (window.speechSynthesis) {
     try { window.speechSynthesis.cancel(); } catch (e) {}
   }
-  
+
   const key = getCacheKey(text, lang);
-  
+
   // 已缓存 → 直接播放
   if (audioCache.has(key)) {
     const audio = new Audio(audioCache.get(key));
     audio.volume = 1;
     audio.playbackRate = rate || 1;
     currentAudio = audio;
-    audio.play().catch(() => {});
+    const playPromise = audio.play();
+    if (playPromise) {
+      playPromise.catch(() => {
+        // 缓存播放失败，尝试重新获取
+        audioCache.delete(key);
+        playWithFallback(text, lang, rate);
+      });
+    }
     return;
   }
-  
-  // 尝试多个音频源（只播放第一个成功的）
+
+  // 音频源列表（Netlify代理优先 - 无CORS问题）
   const sources = [
-    getBaiduUrl(text, lang),
-    getYoudaoUrl(text, lang),
-    getProxyUrl(text, lang),
+    getProxyUrl(text, lang),   // Netlify代理（最可靠）
+    getBaiduUrl(text, lang),   // 百度TTS
+    getYoudaoUrl(text, lang),  // 有道TTS
+    getGoogleUrl(text, lang),  // Google TTS
   ];
-  
+
   let sourceIndex = 0;
   let currentTimeout = null;
-  let isAborted = false; // 标记是否已放弃当前源
-  
+  let isAborted = false;
+
   function stopCurrentAudio() {
     if (currentAudio) {
       currentAudio.pause();
@@ -114,7 +139,7 @@ function playWithFallback(text, lang, rate) {
       currentAudio = null;
     }
   }
-  
+
   function tryNextSource() {
     if (sourceIndex >= sources.length) {
       // 所有音频源失败，使用 Web Speech API
@@ -123,45 +148,54 @@ function playWithFallback(text, lang, rate) {
       }
       return;
     }
-    
+
     // 停止之前的音频
     stopCurrentAudio();
     isAborted = false;
-    
+
     const url = sources[sourceIndex];
     const audio = new Audio(url);
     audio.volume = 1;
     currentAudio = audio;
-    
+
     // 清除之前的超时
     if (currentTimeout) {
       clearTimeout(currentTimeout);
     }
-    
+
+    // 超时设置：Netlify代理给更长时间（可能需请求服务端）
+    const timeoutMs = sourceIndex === 0 ? 5000 : 2000;
     currentTimeout = setTimeout(() => {
-      // 超时：标记已放弃，跳到下一个源
       isAborted = true;
       stopCurrentAudio();
       sourceIndex++;
       tryNextSource();
-    }, sourceIndex === 0 ? 1500 : 1000); // 第一个源1.5秒，其他1秒
-    
+    }, timeoutMs);
+
     audio.addEventListener('canplaythrough', () => {
       if (currentTimeout) {
         clearTimeout(currentTimeout);
         currentTimeout = null;
       }
-      // 如果已被放弃，不播放
       if (isAborted) return;
+
       // 缓存成功
       if (audioCache.size >= MAX_CACHE) {
         const firstKey = audioCache.keys().next().value;
         audioCache.delete(firstKey);
       }
       audioCache.set(key, url);
-      audio.play().catch(() => {});
+
+      const playPromise = audio.play();
+      if (playPromise) {
+        playPromise.catch(() => {
+          // 播放失败，跳到下一个源
+          sourceIndex++;
+          tryNextSource();
+        });
+      }
     }, { once: true });
-    
+
     audio.addEventListener('error', () => {
       if (currentTimeout) {
         clearTimeout(currentTimeout);
@@ -172,18 +206,23 @@ function playWithFallback(text, lang, rate) {
         tryNextSource();
       }
     }, { once: true });
-    
+
     audio.load();
   }
-  
+
   tryNextSource();
 }
 
 // ========== 导出函数 ==========
 
-export function speakFrench(text, onEnd) {
+export function speakFrench(text, rate, onEnd) {
   if (!text || !text.trim()) return;
-  playWithFallback(text, 'fr-FR', 0.85);
+  // 兼容旧API: speakFrench(text, rate) 和 speakFrench(text, onEnd)
+  if (typeof rate === 'function') {
+    onEnd = rate;
+    rate = undefined;
+  }
+  playWithFallback(text, 'fr-FR', rate || 0.85);
   if (onEnd) setTimeout(onEnd, Math.max(500, text.length * 80));
 }
 
@@ -225,8 +264,8 @@ export function preloadAudio(text, lang) {
   if (!text || !text.trim()) return;
   const key = getCacheKey(text, lang);
   if (audioCache.has(key)) return;
-  
-  const url = getBaiduUrl(text, lang);
+
+  const url = getProxyUrl(text, lang);
   const audio = new Audio(url);
   audio.preload = 'auto';
   audio.addEventListener('canplaythrough', () => {

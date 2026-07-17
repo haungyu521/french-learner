@@ -1,15 +1,15 @@
-functionsDirectory = "/Users/huangyu/Documents/Qoder/2026-07-12/chat-2/french-learner/netlify/functions"
+functionsDirectory = "/Users/huangyu/Documents/Qoder/2026-07-15/chat-2/french-learner/netlify/functions"
 functionsDirectoryOrigin = "config-v1"
 redirectsOrigin = "config"
 plugins = []
 headers = []
 
 [build]
-publish = "/Users/huangyu/Documents/Qoder/2026-07-12/chat-2/french-learner/dist"
+publish = "/Users/huangyu/Documents/Qoder/2026-07-15/chat-2/french-learner/dist"
 publishOrigin = "config"
-commandOrigin = "ui"
-command = "npm run build"
-functions = "/Users/huangyu/Documents/Qoder/2026-07-12/chat-2/french-learner/netlify/functions"
+commandOrigin = "config"
+command = "echo 'using pre-built dist'"
+functions = "/Users/huangyu/Documents/Qoder/2026-07-15/chat-2/french-learner/netlify/functions"
 
 [build.environment]
 
