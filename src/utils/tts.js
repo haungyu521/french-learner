@@ -1,5 +1,5 @@
 /**
- * TTS 语音工具 - 多源容错版
+ * TTS 语音工具 - 多源容错版（无双重声音版）
  * 优先级：Netlify代理(无CORS) → 百度TTS → 有道词典 → Google TTS → Web Speech API
  * 法语/英语/韩语均支持
  */
@@ -7,6 +7,9 @@
 let currentAudio = null;
 const audioCache = new Map();
 const MAX_CACHE = 500;
+
+// 会话令牌 - 防止竞态条件导致双重声音
+let sessionId = 0;
 
 // ========== 核心播放函数 ==========
 
@@ -44,6 +47,18 @@ function getGoogleUrl(text, lang) {
   return `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(text.substring(0, 200))}&tl=${langCode}&client=tw-ob`;
 }
 
+// 停止所有当前播放
+function stopAll() {
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio.src = '';
+    currentAudio = null;
+  }
+  if (window.speechSynthesis) {
+    try { window.speechSynthesis.cancel(); } catch (e) {}
+  }
+}
+
 // Web Speech API（最终兜底）
 function speakWithWebSpeech(text, lang, rate) {
   if (!window.speechSynthesis) return false;
@@ -68,10 +83,8 @@ function speakWithWebSpeech(text, lang, rate) {
     utterance.onend = () => {};
     utterance.onerror = () => {};
 
-    // 延迟启动以兼容某些浏览器
     setTimeout(() => {
       window.speechSynthesis.speak(utterance);
-      // iOS Safari workaround
       setTimeout(() => {
         if (window.speechSynthesis.speaking) {
           window.speechSynthesis.resume();
@@ -86,20 +99,15 @@ function speakWithWebSpeech(text, lang, rate) {
   }
 }
 
-// 带多源容错的音频播放
+// 带多源容错的音频播放 - 修复竞态条件
 function playWithFallback(text, lang, rate) {
   if (!text || !text.trim()) return;
 
-  // 停止当前所有音频播放
-  if (currentAudio) {
-    currentAudio.pause();
-    currentAudio.src = '';
-    currentAudio = null;
-  }
-  // 停止 Web Speech
-  if (window.speechSynthesis) {
-    try { window.speechSynthesis.cancel(); } catch (e) {}
-  }
+  // 分配新的会话ID - 旧的异步操作会被丢弃
+  const mySessionId = ++sessionId;
+
+  // 停止所有正在播放的内容
+  stopAll();
 
   const key = getCacheKey(text, lang);
 
@@ -112,7 +120,6 @@ function playWithFallback(text, lang, rate) {
     const playPromise = audio.play();
     if (playPromise) {
       playPromise.catch(() => {
-        // 缓存播放失败，尝试重新获取
         audioCache.delete(key);
         playWithFallback(text, lang, rate);
       });
@@ -122,64 +129,77 @@ function playWithFallback(text, lang, rate) {
 
   // 音频源列表（Netlify代理优先 - 无CORS问题）
   const sources = [
-    getProxyUrl(text, lang),   // Netlify代理（最可靠）
-    getBaiduUrl(text, lang),   // 百度TTS
-    getYoudaoUrl(text, lang),  // 有道TTS
-    getGoogleUrl(text, lang),  // Google TTS
+    getProxyUrl(text, lang),
+    getBaiduUrl(text, lang),
+    getYoudaoUrl(text, lang),
+    getGoogleUrl(text, lang),
   ];
 
   let sourceIndex = 0;
   let currentTimeout = null;
-  let isAborted = false;
 
-  function stopCurrentAudio() {
+  function tryNextSource() {
+    // 如果会话已被新的调用取代，放弃
+    if (mySessionId !== sessionId) return;
+
+    if (sourceIndex >= sources.length) {
+      // 所有音频源失败，使用 Web Speech API
+      speakWithWebSpeech(text, lang, rate);
+      return;
+    }
+
+    // 停止之前尝试的音频
     if (currentAudio) {
       currentAudio.pause();
       currentAudio.src = '';
       currentAudio = null;
     }
-  }
-
-  function tryNextSource() {
-    if (sourceIndex >= sources.length) {
-      // 所有音频源失败，使用 Web Speech API
-      if (!isAborted) {
-        speakWithWebSpeech(text, lang, rate);
-      }
-      return;
-    }
-
-    // 停止之前的音频
-    stopCurrentAudio();
-    isAborted = false;
 
     const url = sources[sourceIndex];
     const audio = new Audio(url);
     audio.volume = 1;
     currentAudio = audio;
 
-    // 清除之前的超时
     if (currentTimeout) {
       clearTimeout(currentTimeout);
+      currentTimeout = null;
     }
 
-    // 超时设置：Netlify代理给更长时间（可能需请求服务端）
-    const timeoutMs = sourceIndex === 0 ? 5000 : 2000;
+    // 超时设置
+    const timeoutMs = sourceIndex === 0 ? 5000 : 2500;
     currentTimeout = setTimeout(() => {
-      isAborted = true;
-      stopCurrentAudio();
+      if (mySessionId !== sessionId) return; // 会话已过期
+      // 超时，跳到下一个源
+      if (currentAudio === audio) {
+        currentAudio = null;
+      }
+      audio.pause();
+      audio.src = '';
       sourceIndex++;
       tryNextSource();
     }, timeoutMs);
 
     audio.addEventListener('canplaythrough', () => {
+      // 关键修复：检查会话是否仍然有效
+      if (mySessionId !== sessionId) {
+        // 会话已过期 - 丢弃这个音频，不要播放
+        audio.pause();
+        audio.src = '';
+        return;
+      }
+      // 关键修复：检查这是否当前的音频对象
+      if (currentAudio !== audio) {
+        audio.pause();
+        audio.src = '';
+        return;
+      }
+
       if (currentTimeout) {
         clearTimeout(currentTimeout);
         currentTimeout = null;
       }
-      if (isAborted) return;
 
-      // 缓存成功
+      // 缓存
       if (audioCache.size >= MAX_CACHE) {
         const firstKey = audioCache.keys().next().value;
         audioCache.delete(firstKey);
@@ -189,7 +209,7 @@ function playWithFallback(text, lang, rate) {
       const playPromise = audio.play();
       if (playPromise) {
         playPromise.catch(() => {
-          // 播放失败，跳到下一个源
+          if (mySessionId !== sessionId) return;
           sourceIndex++;
           tryNextSource();
         });
@@ -197,14 +217,13 @@ function playWithFallback(text, lang, rate) {
     }, { once: true });
 
     audio.addEventListener('error', () => {
+      if (mySessionId !== sessionId) return; // 会话已过期
       if (currentTimeout) {
         clearTimeout(currentTimeout);
         currentTimeout = null;
       }
-      if (!isAborted) {
-        sourceIndex++;
-        tryNextSource();
-      }
+      sourceIndex++;
+      tryNextSource();
     }, { once: true });
 
     audio.load();
@@ -217,7 +236,7 @@ function playWithFallback(text, lang, rate) {
 
 export function speakFrench(text, rate, onEnd) {
   if (!text || !text.trim()) return;
-  // 兼容旧API: speakFrench(text, rate) 和 speakFrench(text, onEnd)
+  // 兼容旧API: speakFrench(text, rate) / speakFrench(text, onEnd) / speakFrench(text)
   if (typeof rate === 'function') {
     onEnd = rate;
     rate = undefined;
@@ -244,20 +263,27 @@ export function speakKorean(text, onEnd) {
   if (onEnd) setTimeout(onEnd, Math.max(500, text.length * 70));
 }
 
+// 慢速韩语
+export function speakKoreanSlow(text, onEnd) {
+  if (!text || !text.trim()) return;
+  playWithFallback(text, 'ko-KR', 0.6);
+  if (onEnd) setTimeout(onEnd, Math.max(800, text.length * 100));
+}
+
+// 慢速英语
+export function speakEnglishSlow(text, onEnd) {
+  if (!text || !text.trim()) return;
+  playWithFallback(text, 'en-US', 0.6);
+  if (onEnd) setTimeout(onEnd, Math.max(800, text.length * 100));
+}
+
 export function speak(text, lang = 'en-US', rate = 0.9) {
   if (!text || !text.trim()) return;
   playWithFallback(text, lang, rate);
 }
 
 export function stopSpeaking() {
-  if (currentAudio) {
-    currentAudio.pause();
-    currentAudio.src = '';
-    currentAudio = null;
-  }
-  if (window.speechSynthesis) {
-    try { window.speechSynthesis.cancel(); } catch (e) {}
-  }
+  stopAll();
 }
 
 export function preloadAudio(text, lang) {

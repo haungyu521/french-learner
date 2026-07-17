@@ -283,6 +283,14 @@ function ExamPrep({ lang }) {
   const skillData = levelData[activeSkill] || [];
   const currentItem = skillData[currentIdx];
 
+  // 获取当前语言对应的文本字段
+  const getItemText = (item) => {
+    if (!item) return '';
+    if (isKo) return item.ko || '';
+    if (isEn) return item.en || '';
+    return item.fr || '';
+  };
+
   useEffect(() => {
     setCurrentIdx(0);
     setShowTip(false);
@@ -360,8 +368,8 @@ function ExamPrep({ lang }) {
         {/* 听力 */}
         {activeSkill === 'listening' && currentItem && (
           <div className="exam-card">
-            <div className="exam-card-fr" onClick={() => speak(currentItem.ko || currentItem.en || currentItem.fr)}>
-              <p className="exam-fr-text">{currentItem.ko || currentItem.en || currentItem.fr}</p>
+            <div className="exam-card-fr" onClick={() => speak(getItemText(currentItem))}>
+              <p className="exam-fr-text">{getItemText(currentItem)}</p>
               <span className="speak-icon">🔊</span>
             </div>
             <p className="exam-cn-text">{currentItem.cn}</p>
@@ -381,9 +389,9 @@ function ExamPrep({ lang }) {
         {/* 阅读 */}
         {activeSkill === 'reading' && currentItem && (
           <div className="exam-card">
-            <p className="exam-fr-text">{currentItem.ko || currentItem.en || currentItem.fr}</p>
+            <p className="exam-fr-text">{getItemText(currentItem)}</p>
             <p className="exam-cn-text">{currentItem.cn}</p>
-            <button className="speak-btn" onClick={() => speak(currentItem.ko || currentItem.en || currentItem.fr)}>🔊 听朗读</button>
+            <button className="speak-btn" onClick={() => speak(getItemText(currentItem))}>🔊 听朗读</button>
             <button className="tip-btn" onClick={() => setShowTip(!showTip)}>💡 {isKo ? 'TOPIK阅读提示' : isEn ? '阅读技巧' : '文化提示'}</button>
             {showTip && <p className="tip-text">{currentItem.tip}</p>}
             <div className="exam-nav">

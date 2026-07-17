@@ -3,14 +3,17 @@ import { curriculumData as frCurriculum } from '../data/curriculum';
 import { vocabularyData as frVocab } from '../data/vocabulary';
 import { englishCurriculum as enCurriculum } from '../data/english/curriculum';
 import { vocabularyData as enVocab } from '../data/english/vocabulary';
+import { koreanCurriculum as koCurriculum } from '../data/korean/curriculum';
+import { vocabularyData as koVocab } from '../data/korean/vocabulary';
 import { speakFrench, speakEnglish, speakKorean } from '../utils/tts';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 
 function Challenge({ lang = 'fr' }) {
+  const isKorean = lang === 'ko';
   const isEnglish = lang === 'en';
-  const curriculumData = isEnglish ? enCurriculum.flatMap(u => u.lessons) : frCurriculum.flatMap(u => u.lessons);
-  const vocabularyData = isEnglish ? enVocab : frVocab;
-  const speak = isEnglish ? speakEnglish : speakFrench;
+  const curriculumData = isKorean ? koCurriculum.flatMap(u => u.lessons) : isEnglish ? enCurriculum.flatMap(u => u.lessons) : frCurriculum.flatMap(u => u.lessons);
+  const vocabularyData = isKorean ? koVocab : isEnglish ? enVocab : frVocab;
+  const speak = isKorean ? speakKorean : isEnglish ? speakEnglish : speakFrench;
 
   const [mode, setMode] = useState('menu');
   const [questions, setQuestions] = useState([]);
@@ -18,11 +21,11 @@ function Challenge({ lang = 'fr' }) {
   const [score, setScore] = useState(0);
   const [selected, setSelected] = useState(null);
   const [showAnswer, setShowAnswer] = useState(false);
-  const storageKey = isEnglish ? 'challenge-best-en' : 'challenge-best';
+  const storageKey = isKorean ? 'challenge-best-ko' : isEnglish ? 'challenge-best-en' : 'challenge-best';
   const [bestScores, setBestScores] = useLocalStorage(storageKey, {});
   const [streak, setStreak] = useState(0);
 
-  const langLabel = isEnglish ? '英语' : '法语';
+  const langLabel = isKorean ? '韩语' : isEnglish ? '英语' : '法语';
 
   const generateQuestions = (type, count = 20) => {
     const qs = [];

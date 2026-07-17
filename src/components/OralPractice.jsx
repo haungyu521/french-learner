@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { speakFrench, speakSlow, speakEnglish, speakKorean } from '../utils/tts';
+import { speakFrench, speakSlow, speakEnglish, speakKorean, speakKoreanSlow, speakEnglishSlow } from '../utils/tts';
 import { proverbs, chineseCulture, freeTopics, accentNotes } from '../data/conversationData';
 import { koreanConversations as koConversations } from '../data/korean/conversationData';
 
@@ -170,9 +170,11 @@ export default function OralPractice({ lang = 'fr' }) {
     setTimeout(() => setIsSpeaking(false), 2000);
   };
 
-  const handleSlowSpeak = (text) => {
+  const handleSlowSpeak = (text, lang) => {
     setIsSpeaking(true);
-    speakSlow(text);
+    if (lang === 'ko') speakKoreanSlow(text);
+    else if (lang === 'en') speakEnglishSlow(text);
+    else speakSlow(text);
     setTimeout(() => setIsSpeaking(false), 3000);
   };
 
@@ -283,8 +285,9 @@ export default function OralPractice({ lang = 'fr' }) {
                   <button className="op-speak-btn" onClick={() => handleSpeak(currentScene.lines[currentLine].text, currentLang)} disabled={isSpeaking}>
                     🔊 {isSpeaking ? '...' : '听发音'}
                   </button>
-                  {currentLang === 'fr' && <button className="op-slow-btn" onClick={() => handleSlowSpeak(currentScene.lines[currentLine].text)} disabled={isSpeaking}>🐢 慢速</button>}
-                  {currentLang === 'ko' && <button className="op-slow-btn" onClick={() => speakKorean(currentScene.lines[currentLine].text)} disabled={isSpeaking}>🐢 慢速</button>}
+                  {currentLang === 'fr' && <button className="op-slow-btn" onClick={() => handleSlowSpeak(currentScene.lines[currentLine].text, 'fr')} disabled={isSpeaking}>🐢 慢速</button>}
+                  {currentLang === 'ko' && <button className="op-slow-btn" onClick={() => handleSlowSpeak(currentScene.lines[currentLine].text, 'ko')} disabled={isSpeaking}>🐢 慢速</button>}
+                  {currentLang === 'en' && <button className="op-slow-btn" onClick={() => handleSlowSpeak(currentScene.lines[currentLine].text, 'en')} disabled={isSpeaking}>🐢 慢速</button>}
                   <button className="op-tip-btn" onClick={() => setShowTip(!showTip)}>💡 {showTip ? '收起' : '提示'}</button>
                 </div>
                 {showTip && <div className="op-tip-detail">{currentScene.lines[currentLine].teacherTip}</div>}
