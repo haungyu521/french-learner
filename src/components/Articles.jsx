@@ -9,18 +9,25 @@ function Articles({ lang = 'fr' }) {
   const [showWordList, setShowWordList] = useState({});
   const [activeWord, setActiveWord] = useState(null);
   const [difficultyFilter, setDifficultyFilter] = useState(0);
-  const [langFilter, setLangFilter] = useState('all');
+  const [langFilter, setLangFilter] = useState(lang === 'en' ? 'en' : 'fr');
   const [tagFilter, setTagFilter] = useState('all');
   const isEnglish = lang === 'en';
   const isKorean = lang === 'ko';
   const allArticles = isKorean ? koreanArticlesData : articlesData;
   const textKey = isKorean ? 'ko' : 'fr';
-  const storageKey = isKorean ? 'read-articles-ko' : 'read-articles';
+  const storageKey = isKorean ? 'read-articles-ko' : lang === 'en' ? 'read-articles-en' : 'read-articles';
   const [readArticles, setReadArticles] = useState(() => {
     try { return JSON.parse(localStorage.getItem(storageKey) || '[]'); } catch { return []; }
   });
   const [readSpeed, setReadSpeed] = useState(0.8);
   const [displayCount, setDisplayCount] = useState(12);
+
+  // 当语言切换时，重置语言筛选器
+  useEffect(() => {
+    if (isKorean) return;
+    setLangFilter(lang === 'en' ? 'en' : 'fr');
+    setDisplayCount(12);
+  }, [lang]);
 
   useEffect(() => { setDisplayCount(12); }, [langFilter, difficultyFilter, tagFilter]);
 
