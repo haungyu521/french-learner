@@ -110,13 +110,42 @@ const quizData = [
 
 export default function Bilingual() {
   const [activeCategory, setActiveCategory] = useState(0);
-  const [mode, setMode] = useState('learn'); // learn / quiz
+  const [mode, setMode] = useState('learn'); // learn / quiz / plan
   const [quizIndex, setQuizIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [showAnswer, setShowAnswer] = useState(false);
   const [selected, setSelected] = useState(null);
 
   const currentCategory = comparisons[activeCategory];
+
+  // 双语学习规划数据
+  const studyPlan = {
+    daily: [
+      { time: '07:00-07:30', task: '🇫🇷 法语SRS复习（30分钟）', detail: '先复习昨天学的词，再学5个新词。用SRS系统自动安排复习。', lang: 'fr' },
+      { time: '07:30-07:45', task: '🇬🇧 英语SRS复习（15分钟）', detail: '快速复习英语单词，用快速复习模式刷一遍。', lang: 'en' },
+      { time: '12:00-12:30', task: '🇫🇷 法语课程学习（30分钟）', detail: '每天学1课新内容，重点记语法和对话。', lang: 'fr' },
+      { time: '18:00-18:30', task: '🇬🇧 英语课程学习（30分钟）', detail: '学习英式英语课程，注意文化注释。', lang: 'en' },
+      { time: '21:00-21:15', task: '🧠 薄弱词复习（15分钟）', detail: '复习今天标记的薄弱词，错误≥3次的词重点攻克。', lang: 'both' },
+      { time: '21:15-21:30', task: '🔗 双语对比学习（15分钟）', detail: '对比今天学的英法知识点，用对比学习模式。', lang: 'both' },
+    ],
+    milestones: [
+      { level: 'A1→A2', duration: '2-3个月', tasks: '掌握基础语法，积累600词/科。能简单自我介绍、点单、问路。', fr: '法语：完成前5课', en: '英语：完成前5课' },
+      { level: 'A2→B1', duration: '3-4个月', tasks: '掌握核心时态，积累1000词/科。能描述日常、写简单邮件。', fr: '法语：完成时态单元', en: '英语：完成时态单元' },
+      { level: 'B1→B2', duration: '4-6个月', tasks: '掌握复杂句型，积累1500词/科。能讨论社会话题、写议论文。', fr: '法语：开始DELF B2备考', en: '英语：开始IELTS 5.5备考' },
+      { level: 'B2→C1', duration: '6-8个月', tasks: '掌握学术表达，积累2000词/科。能写学术论文、做演讲。', fr: '法语：开始DALF C1备考', en: '英语：开始IELTS 7备考' },
+      { level: 'C1→C2', duration: '8-12个月', tasks: '精通文学/哲学表达，积累3000词/科。能读懂原著、写文学分析。', fr: '法语：DALF C2备考', en: '英语：IELTS 8.5+备考' },
+    ],
+    tips: [
+      '🧠 记忆力弱解决方案：每个词至少看7次才能记住，不要急！',
+      '📝 用例句记单词，不要死背中文意思',
+      '🔊 每天听发音跟读3遍，声音记忆比视觉记忆更持久',
+      '⚡ 碎片时间用快速复习模式刷词，等公交/排队时都能学',
+      '🔄 复习比新学重要！每天先复习再学新内容',
+      '🇫🇷🇬🇧 两种语言交替学，避免混淆（早上法语，晚上英语）',
+      '📊 每周日检查薄弱词列表，集中攻克',
+      '🎯 不要贪多！每天5-10个新词足够，贪多嚼不烂',
+    ]
+  };
 
   const handleQuizAnswer = (idx) => {
     if (showAnswer) return;
@@ -139,6 +168,63 @@ export default function Bilingual() {
   };
 
   const speak = (text, lang = 'en') => lang === 'fr' ? speakFrench(text) : speakEnglish(text);
+
+  if (mode === 'plan') {
+    return (
+      <div className="bilingual-section">
+        <div className="bilingual-header">
+          <h2>📅 双语学习规划</h2>
+          <p className="bilingual-subtitle">根据你的水平（A1）和目标（C2）定制</p>
+          <div className="bilingual-tabs">
+            <button onClick={() => setMode('learn')}>对比学习</button>
+            <button onClick={() => { setMode('quiz'); setQuizIndex(0); setScore(0); }}>测验模式</button>
+            <button className="active">学习规划</button>
+          </div>
+        </div>
+
+        <div style={{ background: '#eff6ff', padding: '12px 16px', borderRadius: '8px', marginBottom: '16px', fontSize: '14px' }}>
+          <strong>📊 当前状态：</strong>法语~1400词 / 英语~1200词 | 目标：双语C2
+          <br />
+          <strong>⏰ 每日学习时间：</strong>约2.5小时（法语60% + 英语40%）
+        </div>
+
+        <h3 style={{ margin: '16px 0 8px' }}>📋 每日任务清单</h3>
+        <div style={{ display: 'grid', gap: '8px' }}>
+          {studyPlan.daily.map((item, i) => (
+            <div key={i} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '10px 14px', display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+              <span style={{ fontWeight: 'bold', color: '#3b82f6', whiteSpace: 'nowrap' }}>{item.time}</span>
+              <div>
+                <div style={{ fontWeight: 'bold', marginBottom: '2px' }}>{item.task}</div>
+                <div style={{ fontSize: '13px', color: '#64748b' }}>{item.detail}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <h3 style={{ margin: '20px 0 8px' }}>🎯 阶段里程碑</h3>
+        <div style={{ display: 'grid', gap: '8px' }}>
+          {studyPlan.milestones.map((m, i) => (
+            <div key={i} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '10px 14px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                <strong>{m.level}</strong>
+                <span style={{ color: '#f59e0b', fontSize: '13px' }}>⏱️ {m.duration}</span>
+              </div>
+              <div style={{ fontSize: '13px', color: '#475569', marginBottom: '4px' }}>{m.tasks}</div>
+              <div style={{ fontSize: '12px', color: '#3b82f6' }}>🇫🇷 {m.fr}</div>
+              <div style={{ fontSize: '12px', color: '#ef4444' }}>🇬🇧 {m.en}</div>
+            </div>
+          ))}
+        </div>
+
+        <h3 style={{ margin: '20px 0 8px' }}>💡 记忆弱用户专属建议</h3>
+        <div style={{ display: 'grid', gap: '6px' }}>
+          {studyPlan.tips.map((tip, i) => (
+            <div key={i} style={{ background: '#fefce8', padding: '8px 12px', borderRadius: '6px', fontSize: '13px' }}>{tip}</div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   if (mode === 'quiz') {
     const q = quizData[quizIndex];
@@ -183,6 +269,7 @@ export default function Bilingual() {
         <div className="bilingual-tabs">
           <button className="active">学习模式</button>
           <button onClick={() => { setMode('quiz'); setQuizIndex(0); setScore(0); }}>测验模式</button>
+          <button onClick={() => setMode('plan')}>学习规划</button>
         </div>
       </div>
 

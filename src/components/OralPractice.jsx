@@ -1,253 +1,320 @@
-import { useState } from 'react';
-import { speakFrench, speakSlow } from '../utils/tts';
+import { useState, useEffect, useRef } from 'react';
+import { speakFrench, speakSlow, speakEnglish, speakKorean } from '../utils/tts';
+import { proverbs, chineseCulture, freeTopics, accentNotes } from '../data/conversationData';
+import { koreanConversations as koConversations } from '../data/korean/conversationData';
 
-function OralPractice() {
-  const [currentPhrase, setCurrentPhrase] = useState(0);
-  const [mode, setMode] = useState('repeat'); // repeat, conversation, tongue
-  const [speed, setSpeed] = useState(0.8);
-
-  const phrases = [
-    // 基础 - 日常问候
-    { fr: "Bonjour, comment allez-vous?", cn: "你好，您好吗？", level: "基础" },
-    { fr: "Je m'appelle Marie.", cn: "我叫Marie。", level: "基础" },
-    { fr: "J'habite à Paris.", cn: "我住在巴黎。", level: "基础" },
-    { fr: "Enchanté de faire votre connaissance.", cn: "很高兴认识您。", level: "基础" },
-    { fr: "Excusez-moi, je ne comprends pas. Pouvez-vous répéter?", cn: "不好意思，我不明白。您能再说一遍吗？", level: "基础" },
-    { fr: "Parlez-vous plus lentement, s'il vous plaît?", cn: "请您说慢一点好吗？", level: "基础" },
-    // 进阶 - 社交表达
-    { fr: "Qu'est-ce que vous faites dans la vie?", cn: "您是做什么工作的？", level: "进阶" },
-    { fr: "Je suis très content de vous rencontrer.", cn: "很高兴认识您。", level: "进阶" },
-    { fr: "Pourriez-vous m'aider, s'il vous plaît?", cn: "您能帮帮我吗？", level: "进阶" },
-    { fr: "Il fait beau aujourd'hui, n'est-ce pas?", cn: "今天天气真好，不是吗？", level: "进阶" },
-    { fr: "Est-ce que vous connaissez un bon restaurant près d'ici?", cn: "您知道这附近有好餐厅吗？", level: "进阶" },
-    { fr: "Je voudrais réserver une table pour deux personnes.", cn: "我想预订一个两人桌。", level: "进阶" },
-    // 实用 - 生活场景
-    { fr: "L'addition, s'il vous plaît.", cn: "请结账。", level: "实用" },
-    { fr: "Où se trouvent les toilettes?", cn: "洗手间在哪里？", level: "实用" },
-    { fr: "Je voudrais un café crème et un croissant.", cn: "我想要一杯奶油咖啡和一个羊角面包。", level: "实用" },
-    { fr: "Combien coûte ce manteau?", cn: "这件大衣多少钱？", level: "实用" },
-    { fr: "Je peux essayer cette robe, s'il vous plaît?", cn: "我能试穿这条裙子吗？", level: "实用" },
-    { fr: "Un ticket pour le métro, s'il vous plaît.", cn: "请给我一张地铁票。", level: "实用" },
-    { fr: "Quelle est la prochaine station?", cn: "下一站是哪里？", level: "实用" },
-    { fr: "Je voudrais ouvrir un compte en banque.", cn: "我想开一个银行账户。", level: "实用" },
-    // 高级 - 深入表达
-    { fr: "À mon avis, c'est une excellente idée.", cn: "在我看来，这是个极好的主意。", level: "高级" },
-    { fr: "Je ne suis pas tout à fait d'accord avec vous.", cn: "我不完全同意您的看法。", level: "高级" },
-    { fr: "Pourriez-vous m'expliquer comment ça fonctionne?", cn: "您能给我解释一下这怎么运作吗？", level: "高级" },
-    { fr: "Si j'avais le temps, je voyagerais en Provence.", cn: "如果我有时间，我会去普罗旺斯旅行。", level: "高级" },
-    { fr: "Il faudrait que je parte avant vingt heures.", cn: "我必须在八点前走。", level: "高级" },
-    { fr: "Je me demande si c'est vraiment nécessaire.", cn: "我在想这是否真的有必要。", level: "高级" },
-  ];
-
-  const tongueTwisters = [
-    { fr: "Les chaussettes de l'archiduchesse sont-elles sèches, archi-sèches?", cn: "大公爵夫人的袜子干了吗，特别干吗？" },
-    { fr: "Un chasseur sachant chasser doit savoir chasser sans son chien.", cn: "会打猎的猎人应该能在没有狗的情况下打猎。" },
-    { fr: "Poison sans poison.", cn: "没有毒的毒药。（法语绕口令）" },
-    { fr: "Trois tortues trottaient sur un trottoir très étroit.", cn: "三只乌龟在非常窄的人行道上走。" },
-    { fr: "Si six scies scient six cyprès, six cent six scies scient six cent six cyprès.", cn: "如果六把锯子锯六棵柏树，那么606把锯子就锯606棵柏树。" },
-    { fr: "Poisson sans boisson est poison.", cn: "吃饭不喝酒等于中毒。（法国谚语）" },
-    { fr: "Femme fidèle qui fait des fautes, faut s'en méfier.", cn: "忠实的女人犯了错，要小心。（文字游戏）" },
-    { fr: "Mon dictionnaire me dit des mots dits dits.", cn: "我的字典告诉我说的词说了说了。" },
-    { fr: "Je veux et j'exige d'abondants gage de ta grande sagesse.", cn: "我想要并要求你智慧的充分保证。" },
-    { fr: "As-tu vu le ver luisant qui luit au loin dans le chemin ?", cn: "你看到在远处小路上发光的萤火虫了吗？" },
-  ];
-
-  const conversations = [
-    {
-      title: "在咖啡馆",
+// 场景对话数据
+const aiConversations = {
+  fr: [
+    { title: '在咖啡馆', icon: '☕', level: 'A1',
+      intro: '场景：你走进巴黎街角一家咖啡馆，准备点一杯咖啡。法国人非常看重礼貌，进门一定要说Bonjour！',
+      keyVocab: [{ word: 'servir', meaning: '服务/端上' }, { word: 'sucre', meaning: '糖' }, { word: 'voilà', meaning: '给您' }],
+      tips: '💡 法国咖啡馆文化：坐下后服务员会主动过来，不需要举手示意。说"s\'il vous plaît"（请）是基本礼貌。',
       lines: [
-        { role: "serv", fr: "Bonjour! Qu'est-ce que je vous sers?", cn: "你好！您要什么？" },
-        { role: "you", fr: "Bonjour! Un café, s'il vous plaît.", cn: "你好！请来一杯咖啡。" },
-        { role: "serv", fr: "Avec du sucre ou sans sucre?", cn: "加糖还是不加糖？" },
-        { role: "you", fr: "Avec un peu de sucre, merci.", cn: "加一点糖，谢谢。" },
-        { role: "serv", fr: "Voilà! Ça fait trois euros.", cn: "给您！一共三欧元。" },
-        { role: "you", fr: "Merci beaucoup! Au revoir!", cn: "非常感谢！再见！" },
+        { role: 'ai', text: 'Bonjour ! Qu\'est-ce que je vous sers ?', cn: '你好！您要什么？', teacherTip: '🎓 "je vous sers" 来自 servir（服务），这里意思是"给您上什么"。注意法语中 vous 是尊称。' },
+        { role: 'you', text: 'Un café, s\'il vous plaît.', cn: '请来一杯咖啡。', teacherTip: '🎓 关键词：s\'il vous plaît = 请（正式）。法国人说这句话时语调会上扬，表示礼貌请求。' },
+        { role: 'ai', text: 'Avec ou sans sucre ?', cn: '加糖还是不加糖？', teacherTip: '🎓 "Avec ou sans" = 加还是不加。法国咖啡通常不加糖，要糖需主动说。' },
+        { role: 'you', text: 'Avec un peu de sucre, merci.', cn: '加一点糖，谢谢。', teacherTip: '🎓 "un peu de" = 一点。注意：merci 在法国使用频率极高，什么都要说merci。' },
+        { role: 'ai', text: 'Voilà ! Ça fait trois euros.', cn: '给您！一共三欧元。', teacherTip: '🎓 "Ça fait" = 一共是。法国用欧元，价格说法：trois euros = 3欧。' },
+        { role: 'you', text: 'Merci beaucoup ! Au revoir !', cn: '非常感谢！再见！', teacherTip: '🎓 "Merci beaucoup" 比 "merci" 更热情。离开时一定要说 Au revoir！' },
       ]
     },
-    {
-      title: "问路",
+    { title: '问路', icon: '🗺️', level: 'A1',
+      intro: '场景：你在巴黎街头迷路了，需要向路人问路去火车站。',
+      keyVocab: [{ word: 'tout droit', meaning: '直走' }, { word: 'loin', meaning: '远' }, { word: 'à pied', meaning: '步行' }],
+      tips: '💡 问路时先说 "Excusez-moi" 引起注意，这是法国社交的基本礼仪。',
       lines: [
-        { role: "you", fr: "Excusez-moi, où est la gare?", cn: "打扰一下，火车站在哪？" },
-        { role: "pass", fr: "La gare? C'est tout droit, puis à gauche.", cn: "火车站？直走，然后左转。" },
-        { role: "you", fr: "C'est loin d'ici?", cn: "离这里远吗？" },
-        { role: "pass", fr: "Non, c'est à cinq minutes à pied.", cn: "不远，走路五分钟就到了。" },
-        { role: "you", fr: "Merci beaucoup!", cn: "非常感谢！" },
-        { role: "pass", fr: "De rien! Bonne journée!", cn: "不客气！祝你有美好的一天！" },
+        { role: 'you', text: 'Excusez-moi, où est la gare ?', cn: '打扰一下，火车站在哪？', teacherTip: '🎓 "où est" = ...在哪里。gare = 火车站。' },
+        { role: 'ai', text: 'C\'est tout droit, puis à gauche.', cn: '直走，然后左转。', teacherTip: '🎓 "tout droit" = 直走。"puis" = 然后。' },
+        { role: 'you', text: 'C\'est loin d\'ici ?', cn: '离这里远吗？', teacherTip: '🎓 "C\'est loin" = 远吗？"d\'ici" = 从这里。' },
+        { role: 'ai', text: 'Non, c\'est à cinq minutes à pied.', cn: '不远，走路五分钟。', teacherTip: '🎓 "à pied" = 步行。法国人常用"几分钟"来表示距离。' },
+        { role: 'you', text: 'Merci beaucoup !', cn: '非常感谢！', teacherTip: '🎓 得到帮助后一定要说 merci。' },
       ]
     },
-    {
-      title: "在餐厅",
+    { title: '超市购物', icon: '🛒', level: 'A1',
+      intro: '场景：你在法国超市购物，需要询问价格和找商品。',
+      keyVocab: [{ word: 'combien', meaning: '多少' }, { word: 'cher', meaning: '贵的' }, { word: 'caisse', meaning: '收银台' }],
+      tips: '💡 法国超市进门要先拿推车或篮子，结账要自己扫码装袋。',
       lines: [
-        { role: "serv", fr: "Bonsoir! Vous avez réservé?", cn: "晚上好！您预订了吗？" },
-        { role: "you", fr: "Oui, une table pour deux, au nom de Li.", cn: "是的，两人桌，姓李。" },
-        { role: "serv", fr: "Suivez-moi. Voici la carte.", cn: "请跟我来。这是菜单。" },
-        { role: "you", fr: "Qu'est-ce que vous recommandez?", cn: "您推荐什么？" },
-        { role: "serv", fr: "Le filet de bœuf est excellent.", cn: "牛排非常好。" },
-        { role: "you", fr: "Très bien, je vais prendre ça. Et comme dessert, une crème brûlée.", cn: "好的，我要这个。甜点要焦糖布丁。" },
-        { role: "serv", fr: "Excellent choix!", cn: "很好的选择！" },
+        { role: 'you', text: 'Excusez-moi, où sont les fruits et légumes ?', cn: '打扰，水果蔬菜在哪？', teacherTip: '🎓 "fruits et légumes" = 水果蔬菜。' },
+        { role: 'ai', text: 'C\'est au fond du magasin, à gauche.', cn: '在超市最里面，左边。', teacherTip: '🎓 "au fond" = 在最里面。' },
+        { role: 'you', text: 'Combien coûtent les pommes ?', cn: '苹果多少钱？', teacherTip: '🎓 "Combien coûtent" = 多少钱。coûter = 花费。' },
+        { role: 'ai', text: 'Les pommes sont à trois euros le kilo.', cn: '苹果三欧一公斤。', teacherTip: '🎓 法国用公斤，不用斤！' },
+        { role: 'you', text: 'D\'accord, je prends un kilo. Où est la caisse ?', cn: '好的，来一公斤。收银台在哪？', teacherTip: '🎓 "je prends" = 我要了。"la caisse" = 收银台。' },
       ]
     },
-    {
-      title: "看医生",
+    { title: '看医生', icon: '🏥', level: 'A2',
+      intro: '场景：你在法国生病了，需要去看医生。',
+      keyVocab: [{ word: 'malade', meaning: '生病的' }, { word: 'ordonnance', meaning: '处方' }, { word: 'pharmacie', meaning: '药房' }],
+      tips: '💡 法国看病需要先在Santé.fr预约，然后带Carte Vitale（医保卡）去。',
       lines: [
-        { role: "doc", fr: "Qu'est-ce que vous avez?", cn: "您怎么了？" },
-        { role: "you", fr: "J'ai mal à la gorge et j'ai de la fièvre.", cn: "我喉咙痛，还发烧了。" },
-        { role: "doc", fr: "Depuis quand?", cn: "多久了？" },
-        { role: "you", fr: "Depuis trois jours.", cn: "三天了。" },
-        { role: "doc", fr: "Ouvrez la bouche, s'il vous plaît. Vous avez une angine.", cn: "请张嘴。您得了扁桃体炎。" },
-        { role: "you", fr: "Qu'est-ce que je dois faire?", cn: "我该怎么办？" },
-        { role: "doc", fr: "Je vous prescris des antibiotiques. Prenez-les trois fois par jour.", cn: "我给您开抗生素。每天吃三次。" },
+        { role: 'ai', text: 'Bonjour, qu\'est-ce qui ne va pas ?', cn: '你好，哪里不舒服？', teacherTip: '🎓 医生问诊的标准开场。' },
+        { role: 'you', text: 'J\'ai mal à la tête et je tousse beaucoup.', cn: '我头疼，而且咳嗽很厉害。', teacherTip: '🎓 "J\'ai mal à" = 我...疼。' },
+        { role: 'ai', text: 'Depuis combien de temps ?', cn: '多久了？', teacherTip: '🎓 法国医生一定会问的问题。' },
+        { role: 'you', text: 'Depuis trois jours.', cn: '三天了。', teacherTip: '🎓 "Depuis" = 已经...了。' },
+        { role: 'ai', text: 'Je vais vous faire une ordonnance. Allez à la pharmacie.', cn: '我给你开个处方。去药房吧。', teacherTip: '🎓 "ordonnance" = 处方。' },
       ]
     },
-    {
-      title: "在商店购物",
+    { title: '讨论兴趣', icon: '🎭', level: 'A2',
+      intro: '场景：和一个法国朋友聊天，讨论各自的兴趣爱好。',
+      keyVocab: [{ word: 'passion', meaning: '热爱' }, { word: 'loisir', meaning: '爱好' }, { word: 'partager', meaning: '分享' }],
+      tips: '💡 法国人聊天时喜欢深入讨论，不像英美那样只聊表面。',
       lines: [
-        { role: "you", fr: "Excusez-moi, vous avez ce pull en taille moyenne?", cn: "请问这件毛衣有中号吗？" },
-        { role: "vend", fr: "Laissez-moi vérifier... Oui, le voici.", cn: "让我查一下...有的，给您。" },
-        { role: "you", fr: "Je peux l'essayer?", cn: "我能试穿吗？" },
-        { role: "vend", fr: "Bien sûr, les cabines d'essayage sont au fond.", cn: "当然，试衣间在里面。" },
-        { role: "you", fr: "Il me va bien. Combien ça coûte?", cn: "很合身。多少钱？" },
-        { role: "vend", fr: "Quarante-cinq euros.", cn: "45欧元。" },
-        { role: "you", fr: "D'accord, je le prends. Je peux payer par carte?", cn: "好的，我要了。能刷卡吗？" },
-        { role: "vend", fr: "Oui, bien sûr.", cn: "当然可以。" },
+        { role: 'ai', text: 'Qu\'est-ce que tu aimes faire pendant ton temps libre ?', cn: '你空闲时间喜欢做什么？', teacherTip: '🎓 "temps libre" = 空闲时间。' },
+        { role: 'you', text: 'J\'aime lire et faire de la photo. Et toi ?', cn: '我喜欢阅读和摄影。你呢？', teacherTip: '🎓 "faire de la photo" = 摄影。' },
+        { role: 'ai', text: 'Moi, je suis passionné de cinéma et de cuisine.', cn: '我热爱电影和烹饪。', teacherTip: '🎓 "passionné de" = 对...充满热情。' },
+        { role: 'you', text: 'Quel est ton film préféré ?', cn: '你最喜欢的电影是什么？', teacherTip: '🎓 "Quel est..." = ...是什么？' },
+        { role: 'ai', text: 'J\'adore "Intouchables". C\'est un film touchant et drôle.', cn: '我喜欢《触不可及》。感人又好笑。', teacherTip: '🎓 "touchant" = 感人的。"drôle" = 好笑的。' },
       ]
     },
-  ];
+    { title: '谈论天气', icon: '🌦️', level: 'A2',
+      intro: '场景：和法国邻居聊天气。天气是全球通用的聊天话题！',
+      keyVocab: [{ word: 'temps', meaning: '天气/时间' }, { word: 'soleil', meaning: '太阳' }, { word: 'pleuvoir', meaning: '下雨' }],
+      tips: '💡 法国天气多变，南法阳光充足，北法经常下雨。',
+      lines: [
+        { role: 'ai', text: 'Il fait beau aujourd\'hui, non ?', cn: '今天天气很好，对吧？', teacherTip: '🎓 "Il fait beau" = 天气好。' },
+        { role: 'you', text: 'Oui, enfin ! Après toute cette pluie...', cn: '是啊，终于！下了那么多雨之后...', teacherTip: '🎓 "enfin" = 终于。' },
+        { role: 'ai', text: 'Paraît que ce week-end il va faire chaud !', cn: '据说这个周末会很热！', teacherTip: '🎓 "il va faire chaud" = 将会很热（近将来时）。' },
+        { role: 'you', text: 'Super ! Je vais en profiter pour aller au parc.', cn: '太好了！我要趁机去公园。', teacherTip: '🎓 "en profiter" = 利用这个机会。' },
+      ]
+    },
+  ],
+  en: [
+    { title: 'At the Pub', icon: '🍺', level: 'A1',
+      intro: 'You walk into a traditional British pub. Time to order a drink like a local!',
+      keyVocab: [{ word: 'pint', meaning: '品脱(英制)' }, { word: 'barman', meaning: '酒保' }, { word: 'cheers', meaning: '干杯/谢谢' }],
+      tips: '💡 British pubs: you order at the bar, not at the table. Always say "cheers" when someone buys you a drink!',
+      lines: [
+        { role: 'ai', text: 'Evening! What can I get you?', cn: '晚上好！要来点什么？', teacherTip: '🎓 "What can I get you?" = 要什么？英式口语常用。' },
+        { role: 'you', text: 'A pint of lager, please.', cn: '请来一品脱拉格啤酒。', teacherTip: '🎓 "pint" = 品脱（约568ml）。英式酒吧标准点法。' },
+        { role: 'ai', text: 'That\'ll be four pounds fifty.', cn: '一共4镑50。', teacherTip: '🎓 "That\'ll be" = 一共是。英国用pounds（镑）。' },
+        { role: 'you', text: 'Here you go. Cheers!', cn: '给你。谢谢！', teacherTip: '🎓 "Here you go" = 给你（口语）。"Cheers" 在英国万能用！' },
+        { role: 'ai', text: 'Cheers, mate! Enjoy!', cn: '谢谢，哥们！慢慢喝！', teacherTip: '🎓 "mate" = 哥们/朋友。英国人之间常用。' },
+      ]
+    },
+    { title: 'Asking for Directions', icon: '🗺️', level: 'A1',
+      intro: 'You\'re lost in London. Ask a passer-by for help.',
+      keyVocab: [{ word: 'tube', meaning: '地铁(英式)' }, { word: 'junction', meaning: '十字路口' }, { word: 'opposite', meaning: '对面' }],
+      tips: '💡 Londoners say "tube" not "subway", and "pavement" not "sidewalk".',
+      lines: [
+        { role: 'you', text: 'Excuse me, how do I get to the nearest tube station?', cn: '打扰，最近的地铁站怎么走？', teacherTip: '🎓 "tube" = 地铁（英式）。美国人叫subway。' },
+        { role: 'ai', text: 'Go straight on, then turn left at the junction.', cn: '直走，到十字路口左转。', teacherTip: '🎓 "straight on" = 直走。"junction" = 路口（英式）。' },
+        { role: 'you', text: 'Is it far from here?', cn: '离这远吗？', teacherTip: '🎓 英式问路标准句式。' },
+        { role: 'ai', text: 'About ten minutes\' walk. You can\'t miss it.', cn: '走路大概十分钟。你不会错过的。', teacherTip: '🎓 "You can\'t miss it" = 你不会错过的。经典指路用语。' },
+        { role: 'you', text: 'Brilliant, thanks very much!', cn: '太好了，非常感谢！', teacherTip: '🎓 "Brilliant" = 太好了（英式口语高频词）。' },
+      ]
+    },
+    { title: 'Shopping in London', icon: '🛍️', level: 'A1',
+      intro: 'You\'re shopping at a London market. Ask about prices and sizes.',
+      keyVocab: [{ word: 'quid', meaning: '镑(口语)' }, { word: 'size', meaning: '尺码' }, { word: 'change', meaning: '找零' }],
+      tips: '💡 "Quid" is slang for pounds. "How much" is the key phrase for shopping.',
+      lines: [
+        { role: 'you', text: 'Excuse me, how much is this jumper?', cn: '打扰，这件毛衣多少钱？', teacherTip: '🎓 "jumper" = 毛衣（英式）。美国人叫sweater。' },
+        { role: 'ai', text: 'That one\'s twenty-five quid.', cn: '那件25镑。', teacherTip: '🎓 "quid" = 镑（口语）。正式场合用pounds。' },
+        { role: 'you', text: 'Do you have it in a smaller size?', cn: '有小一号的吗？', teacherTip: '🎓 英国买衣服常用句式。' },
+        { role: 'ai', text: 'Yeah, here you are. That\'ll be twenty-five pounds.', cn: '有的，给你。一共25镑。', teacherTip: '🎓 "here you are" = 给你。' },
+        { role: 'you', text: 'Can I pay by card?', cn: '可以刷卡吗？', teacherTip: '🎓 英国几乎到处都能刷卡。' },
+      ]
+    },
+    { title: 'At the Doctor\'s', icon: '🏥', level: 'A2',
+      intro: 'You\'re feeling unwell in London. Time to see a GP.',
+      keyVocab: [{ word: 'GP', meaning: '全科医生' }, { word: 'prescription', meaning: '处方' }, { word: 'NHS', meaning: '国民医疗服务' }],
+      tips: '💡 The NHS (National Health Service) provides free healthcare in the UK.',
+      lines: [
+        { role: 'ai', text: 'Good morning. What seems to be the problem?', cn: '早上好。怎么了？', teacherTip: '🎓 英式医生标准问诊开场。' },
+        { role: 'you', text: 'I\'ve got a terrible headache and a sore throat.', cn: '我头疼得厉害，嗓子也疼。', teacherTip: '🎓 "I\'ve got" = 我有（英式口语常用）。' },
+        { role: 'ai', text: 'How long have you had these symptoms?', cn: '这些症状多久了？', teacherTip: '🎓 现在完成时问诊。' },
+        { role: 'you', text: 'For about three days now.', cn: '大概三天了。', teacherTip: '🎓 "for about..." = 大约...了。' },
+        { role: 'ai', text: 'I\'ll write you a prescription. Take it to the chemist.', cn: '我给你开个处方。去药房拿药。', teacherTip: '🎓 "chemist" = 药房（英式）。美国人叫pharmacy。' },
+      ]
+    },
+    { title: 'Chatting about Hobbies', icon: '🎭', level: 'A2',
+      intro: 'Making small talk with a British colleague about hobbies.',
+      keyVocab: [{ word: 'keen on', meaning: '热衷于' }, { word: 'gig', meaning: '演出(英式)' }, { word: 'fancy', meaning: '想要(英式口语)' }],
+      tips: '💡 British small talk often involves hobbies, football, and the weather!',
+      lines: [
+        { role: 'ai', text: 'So, what do you get up to at the weekend?', cn: '那你周末一般做什么？', teacherTip: '🎓 "get up to" = 做（英式口语）。"at the weekend" = 在周末（英式）。' },
+        { role: 'you', text: 'I\'m quite keen on photography and hiking.', cn: '我挺喜欢摄影和徒步。', teacherTip: '🎓 "keen on" = 热衷于（英式高频表达）。' },
+        { role: 'ai', text: 'Oh brilliant! I\'m really into live music. Love going to gigs.', cn: '太棒了！我非常喜欢现场音乐，爱去看演出。', teacherTip: '🎓 "into" = 热衷于。"gig" = 演出（英式口语）。' },
+        { role: 'you', text: 'Fancy coming to an exhibition with me sometime?', cn: '要不要有空和我一起去看个展？', teacherTip: '🎓 "Fancy doing..." = 想要做...吗？（英式口语邀请）。' },
+        { role: 'ai', text: 'Yeah, that sounds lovely. Let\'s do it!', cn: '好啊，听起来很棒。就这么定了！', teacherTip: '🎓 "lovely" = 很好的（英式万能好评词）。' },
+      ]
+    },
+  ],
+  ko: koConversations,
+};
 
-  const speak = (text, rate) => rate ? speakSlow(text, 'fr-FR', rate) : speakFrench(text, speed);
+export default function OralPractice({ lang = 'fr' }) {
+  const [currentLang, setCurrentLang] = useState(lang);
+  const [currentScene, setCurrentScene] = useState(null);
+  const [currentLine, setCurrentLine] = useState(0);
+  const [showTip, setShowTip] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [showIntro, setShowIntro] = useState(true);
+  const [completedLines, setCompletedLines] = useState([]);
+  const resultRef = useRef(null);
 
-  const currentList = mode === 'tongue' ? tongueTwisters : phrases;
+  // 当外部 lang 属性变化时，同步内部语言状态
+  useEffect(() => {
+    setCurrentLang(lang);
+    setCurrentScene(null);
+  }, [lang]);
+
+  const currentData = aiConversations[currentLang] || [];
+
+  const handleSpeak = (text, lang) => {
+    setIsSpeaking(true);
+    if (lang === 'fr') speakFrench(text);
+    else if (lang === 'ko') speakKorean(text);
+    else speakEnglish(text);
+    setTimeout(() => setIsSpeaking(false), 2000);
+  };
+
+  const handleSlowSpeak = (text) => {
+    setIsSpeaking(true);
+    speakSlow(text);
+    setTimeout(() => setIsSpeaking(false), 3000);
+  };
+
+  const handleSceneChange = (scene) => {
+    setCurrentScene(scene);
+    setCurrentLine(0);
+    setShowIntro(true);
+    setCompletedLines([]);
+    setShowTip(false);
+  };
+
+  const handleNextLine = () => {
+    if (currentLine >= currentScene.lines.length - 1) {
+      setCompletedLines(currentScene.lines.map((_, i) => i));
+      return;
+    }
+    setCompletedLines(prev => [...prev, currentLine]);
+    setCurrentLine(prev => prev + 1);
+    setShowTip(false);
+  };
+
+  const completionRate = currentScene ? (completedLines.length / currentScene.lines.length * 100) : 0;
 
   return (
     <div className="oral-practice">
-      <div className="oral-header">
-        <h2>🗣️ 口语练习</h2>
-        <p className="subtitle">听发音，跟读练习，提升你的法语口语能力</p>
+      {/* 顶部：语言切换 */}
+      <div className="op-header">
+        <h2>🎓 口语练习</h2>
+        <div className="op-lang-switch">
+          <button className={currentLang === 'fr' ? 'active' : ''} onClick={() => { setCurrentLang('fr'); setCurrentScene(null); }}>🇫🇷 法语</button>
+          <button className={currentLang === 'en' ? 'active' : ''} onClick={() => { setCurrentLang('en'); setCurrentScene(null); }}>🇬🇧 英语</button>
+          <button className={currentLang === 'ko' ? 'active' : ''} onClick={() => { setCurrentLang('ko'); setCurrentScene(null); }}>🇰🇷 韩语</button>
+        </div>
       </div>
 
-      <div className="mode-tabs">
-        <button className={`tab ${mode === 'repeat' ? 'active' : ''}`} onClick={() => { setMode('repeat'); setCurrentPhrase(0); }}>
-          🔄 跟读练习
-        </button>
-        <button className={`tab ${mode === 'conversation' ? 'active' : ''}`} onClick={() => { setMode('conversation'); setCurrentPhrase(0); }}>
-          💬 情景对话
-        </button>
-        <button className={`tab ${mode === 'tongue' ? 'active' : ''}`} onClick={() => { setMode('tongue'); setCurrentPhrase(0); }}>
-          👅 绕口令
-        </button>
-      </div>
-
-      <div className="speed-control">
-        <label>朗读速度：</label>
-        <input type="range" min="0.5" max="1.2" step="0.1" value={speed} onChange={e => setSpeed(Number(e.target.value))} />
-        <span>{speed === 0.5 ? '很慢' : speed <= 0.7 ? '慢速' : speed <= 0.9 ? '正常' : '快速'}</span>
-      </div>
-
-      {mode !== 'conversation' ? (
-        <div className="phrase-practice">
-          {currentList[currentPhrase] && (
-            <div className="phrase-card">
-              <span className="phrase-level">{phrases[currentPhrase]?.level || '挑战'}</span>
-              <div className="phrase-main">
-                <h3 className="phrase-fr">{currentList[currentPhrase].fr}</h3>
-                <p className="phrase-cn">{currentList[currentPhrase].cn}</p>
+      {/* 未选场景：显示场景列表 */}
+      {!currentScene && (
+        <div className="op-scene-list">
+          <p className="op-subtitle">选择一个场景开始对话练习</p>
+          <div className="op-grid">
+            {currentData.map((scene, i) => (
+              <div key={i} className="op-card" onClick={() => handleSceneChange(scene)}>
+                <span className="op-icon">{scene.icon}</span>
+                <strong>{scene.title}</strong>
+                <span className="op-level">{scene.level}</span>
               </div>
-              <div className="phrase-actions">
-                <button className="speak-btn large" onClick={() => speak(currentList[currentPhrase].fr)}>
-                  🔊 听发音
-                </button>
-                <button className="speak-btn large slow" onClick={() => speak(currentList[currentPhrase].fr, 0.5)}>
-                  🐢 慢速
-                </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 场景介绍 */}
+      {currentScene && showIntro && (
+        <div className="op-intro">
+          <button className="op-back" onClick={() => setCurrentScene(null)}>← 返回</button>
+          <div className="op-intro-card">
+            <h3>{currentScene.icon} {currentScene.title}</h3>
+            <p className="op-intro-text">{currentScene.intro}</p>
+            {currentScene.keyVocab && (
+              <div className="op-vocab-row">
+                {currentScene.keyVocab.map((v, i) => (
+                  <span key={i} className="op-vocab-tag"><strong>{v.word}</strong> {v.meaning}</span>
+                ))}
               </div>
-              <div className="phrase-nav">
-                <button onClick={() => setCurrentPhrase(Math.max(0, currentPhrase - 1))} disabled={currentPhrase === 0}>
-                  ← 上一句
-                </button>
-                <span>{currentPhrase + 1} / {currentList.length}</span>
-                <button onClick={() => setCurrentPhrase(Math.min(currentList.length - 1, currentPhrase + 1))} disabled={currentPhrase === currentList.length - 1}>
-                  下一句 →
-                </button>
+            )}
+            <div className="op-tip-box">{currentScene.tips}</div>
+            <button className="op-start-btn" onClick={() => setShowIntro(false)}>开始练习 →</button>
+          </div>
+        </div>
+      )}
+
+      {/* 对话练习 */}
+      {currentScene && !showIntro && (
+        <div className="op-conversation">
+          <div className="op-conv-top">
+            <button className="op-back" onClick={() => { setCurrentScene(null); setCompletedLines([]); setCurrentLine(0); }}>← 返回</button>
+            <div className="op-progress">
+              <span>{completedLines.length}/{currentScene.lines.length}</span>
+              <div className="op-progress-bar"><div className="op-progress-fill" style={{ width: `${completionRate}%` }}></div></div>
+            </div>
+          </div>
+
+          {/* 历史对话 */}
+          <div className="op-history">
+            {completedLines.map((lineIdx) => {
+              const line = currentScene.lines[lineIdx];
+              return (
+                <div key={lineIdx} className={`op-msg ${line.role}`}>
+                  <span className="op-msg-role">{line.role === 'ai' ? (currentLang === 'fr' ? '🇫🇷' : currentLang === 'ko' ? '🇰🇷' : '🇬🇧') : '🙋'}</span>
+                  <div className="op-msg-body">
+                    <p className="op-msg-text">{line.text}</p>
+                    <p className="op-msg-cn">{line.cn}</p>
+                  </div>
+                  <button className="op-msg-speak" onClick={() => handleSpeak(line.text, currentLang)} title="听发音">🔊</button>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* 当前句 */}
+          {completedLines.length < currentScene.lines.length && (
+            <div className={`op-current ${currentScene.lines[currentLine].role}`}>
+              <span className="op-msg-role">{currentScene.lines[currentLine].role === 'ai' ? (currentLang === 'fr' ? '🇫🇷' : currentLang === 'ko' ? '🇰🇷' : '🇬🇧') : '🙋 你说'}</span>
+              <div className="op-msg-body">
+                <p className="op-msg-text">{currentScene.lines[currentLine].text}</p>
+                <p className="op-msg-cn">{currentScene.lines[currentLine].cn}</p>
+                <div className="op-actions">
+                  <button className="op-speak-btn" onClick={() => handleSpeak(currentScene.lines[currentLine].text, currentLang)} disabled={isSpeaking}>
+                    🔊 {isSpeaking ? '...' : '听发音'}
+                  </button>
+                  {currentLang === 'fr' && <button className="op-slow-btn" onClick={() => handleSlowSpeak(currentScene.lines[currentLine].text)} disabled={isSpeaking}>🐢 慢速</button>}
+                  {currentLang === 'ko' && <button className="op-slow-btn" onClick={() => speakKorean(currentScene.lines[currentLine].text)} disabled={isSpeaking}>🐢 慢速</button>}
+                  <button className="op-tip-btn" onClick={() => setShowTip(!showTip)}>💡 {showTip ? '收起' : '提示'}</button>
+                </div>
+                {showTip && <div className="op-tip-detail">{currentScene.lines[currentLine].teacherTip}</div>}
               </div>
             </div>
           )}
 
-          <div className="practice-steps">
-            <h4>跟读三步法：</h4>
-            <div className="steps">
-              <div className="step">
-                <span className="step-num">1</span>
-                <div>
-                  <strong>听</strong>
-                  <p>点击🔊，仔细听发音和语调</p>
-                </div>
-              </div>
-              <div className="step">
-                <span className="step-num">2</span>
-                <div>
-                  <strong>模仿</strong>
-                  <p>用🐢慢速反复听，跟着念</p>
-                </div>
-              </div>
-              <div className="step">
-                <span className="step-num">3</span>
-                <div>
-                  <strong>脱稿</strong>
-                  <p>不看文字，凭记忆说出来</p>
-                </div>
-              </div>
+          {/* 操作按钮 */}
+          {completedLines.length < currentScene.lines.length && (
+            <div className="op-nav-btns">
+              {currentScene.lines[currentLine].role === 'you' ? (
+                <button className="op-next-btn" onClick={handleNextLine} disabled={isSpeaking}>
+                  {currentLine >= currentScene.lines.length - 1 ? '完成 ✅' : '下一句 →'}
+                </button>
+              ) : (
+                <button className="op-next-btn auto" onClick={handleNextLine}>点击继续 →</button>
+              )}
             </div>
-          </div>
-        </div>
-      ) : (
-        <div className="conversation-practice">
-          <div className="conversation-selector">
-            {conversations.map((conv, idx) => (
-              <button key={idx} className={`conv-btn ${currentPhrase === idx ? 'active' : ''}`} onClick={() => setCurrentPhrase(idx)}>
-                {conv.title}
-              </button>
-            ))}
-          </div>
+          )}
 
-          {conversations[currentPhrase] && (
-            <div className="conversation-dialog">
-              <h3>💬 {conversations[currentPhrase].title}</h3>
-              {conversations[currentPhrase].lines.map((line, idx) => (
-                <div key={idx} className={`dialog-line ${line.role === 'you' ? 'your-line' : 'other-line'}`}>
-                  <div className="line-header">
-                    <span className="role-badge">{line.role === 'you' ? '🧑 你说' : '👤 对方'}</span>
-                  </div>
-                  <p className="line-fr">{line.fr}</p>
-                  <p className="line-cn">{line.cn}</p>
-                  <button className="mini-speak-btn" onClick={() => speak(line.fr)}>🔊</button>
-                </div>
-              ))}
-              <button className="speak-btn large" onClick={() => {
-                const lines = conversations[currentPhrase].lines;
-                let delay = 0;
-                lines.forEach(line => {
-                  setTimeout(() => speak(line.fr), delay);
-                  delay += 3000;
-                });
-              }}>
-                🔊 播放整段对话
-              </button>
+          {/* 完成 */}
+          {completedLines.length >= currentScene.lines.length && (
+            <div className="op-done">
+              <h3>🎉 练习完成！</h3>
+              <p>你已完成「{currentScene.title}」的全部对话！</p>
+              <button className="op-restart" onClick={() => { setCurrentScene(null); setCompletedLines([]); }}>选择其他场景</button>
             </div>
           )}
         </div>
       )}
-
-      <div className="study-tips">
-        <h4>📝 口语练习建议</h4>
-        <ul>
-          <li>每天练15分钟比一周突击一次效果好</li>
-          <li>先用慢速（🐢）把每个音发准，再逐渐提速</li>
-          <li>对着镜子练，观察嘴型变化</li>
-          <li>绕口令是练发音的终极武器，从简单的开始</li>
-        </ul>
-      </div>
     </div>
   );
 }
-
-export default OralPractice;

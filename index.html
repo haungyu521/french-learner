@@ -9,6 +9,10 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="description" content="专为健忘星人设计的双语学习助手 - 法语、英语系统学习" />
+    <!-- DNS预解析 + 预连接：减少TTS音频延迟 -->
+    <link rel="dns-prefetch" href="https://fanyi.baidu.com" />
+    <link rel="preconnect" href="https://fanyi.baidu.com" crossorigin />
+    <link rel="dns-prefetch" href="https://dict.youdao.com" />
     <link rel="manifest" href="/manifest.json" />
     <link rel="apple-touch-icon" href="/favicon.svg" />
     <title>双语学习 - 法语英语</title>
@@ -20,6 +24,7 @@
   </head>
   <body>
     <div id="root"></div>
+    <script src="https://js.puter.com/v2/"></script>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

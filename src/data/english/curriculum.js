@@ -26,7 +26,8 @@ export const englishCurriculum = [
         practice: [
           { type: "choice", question: "英式英语中，'water'的t怎么发?", options: ["不发音", "闪音/ɾ/", "清晰的/t/", "发/d/"], answer: 2 },
           { type: "choice", question: "英式英语的r在词尾发音吗?", options: ["发音", "不发音", "有时发音", "看情况"], answer: 1 },
-        ]
+        ],
+        culture: { title: "🇬🇧 英式vs美式英语概览", content: "英国英语和美国英语的差异就像普通话和台湾腔：\n\n🔤 拼写差异：\n- 英式 colour / 美式 color\n- 英式 centre / 美式 center\n- 英式 organise / 美式 organize\n- 英式 travelling / 美式 traveling\n\n🗣️ 发音差异：\n- 英式不卷舌：car /kɑː/ → 美式卷舌 /kɑːr/\n- 英式清晰/t/：water → 美式闪音 /ɾ/\n- 英式/ɒ/：hot → 美式/ɑː/\n\n💡 实用建议：\n选一种坚持学，不要混用。雅思考试接受两种，但保持一致最重要。", tip: "英式英语是'老家'，美式英语受法语影响更大（拼写改革）" }
       },
       {
         id: 'en2', title: "Lesson 2: 打招呼与告别", goal: "学会各种场合的英语打招呼",
@@ -50,7 +51,8 @@ export const englishCurriculum = [
         practice: [
           { type: "fill", question: "Good ___, class! (早上好)", answer: "morning", hint: "早上" },
           { type: "choice", question: "英式非正式打招呼用?", options: ["Good morning", "How do you do?", "Alright?", "Good evening"], answer: 2 },
-        ]
+        ],
+        culture: { title: "🇬🇧 英国人的打招呼文化", content: "英国人打招呼有一套潜规则：\n\n🤝 正式场合：\n- 'How do you do?' — 最高级，只在初次见面用，回答也是 'How do you do?'（不是问句！）\n- 'Good morning/afternoon' — 对长辈、上司、陌生人\n\n☕ 日常社交：\n- 'How are you?' — 只是打招呼！不要真的回答你的状态\n- 标准回答：'Fine, thanks. And you?' 或 'Not bad, cheers.'\n\n🍺 朋友之间：\n- 'Alright?' — 英式特色！等于'你好'，回答 'Alright!' 就行\n- 'Hiya!' — 北部常用，很亲切\n- 'Cheers!' — 既是'谢谢'也是'再见'\n\n⚠️ 文化提示：\n英国人不喜欢拥抱打招呼（法国贴面礼bise的反面），握手或点头就够了。", tip: "英国人说'How are you'就像中国人说'吃了吗'，只是客气！" }
       },
       {
         id: 'en3', title: "Lesson 3: 自我介绍", goal: "能用英语完整介绍自己",
@@ -75,7 +77,8 @@ export const englishCurriculum = [
         practice: [
           { type: "fill", question: "I ___ twenty-five years old. (我25岁)", answer: "am", hint: "be动词" },
           { type: "choice", question: "'很高兴认识你' 英语是?", options: ["How are you?", "Nice to meet you", "Good to see", "Happy to know"], answer: 1 },
-        ]
+        ],
+        culture: { title: "🇬🇧 英国人的自我介绍习惯", content: "英国人自我介绍有一些文化特点：\n\n🏠 不说年龄：\n英国人一般不主动说自己年龄（除非很年轻），这和中国人不同。\n❌ 'I'm 25 years old.' → 一般不说，除非被问\n✅ 'I work as a...' 更常用\n\n🎓 职业比学历重要：\n英国人介绍自己更强调工作而不是学历：\n'I'm a software engineer at Google.' ✓\n'I graduated from Oxford.' (除非对方问)\n\n🏡 住址模糊化：\n英国人说大致区域，不说具体地址：\n'I live in South London.' ✓\n'I live at 42 Baker Street.' ✗（太详细）\n\n⚽ 兴趣爱好破冰：\n英国人爱聊足球、天气、音乐：\n'I'm a massive football fan.' — 很好的破冰话题", tip: "英国人自我介绍：少说隐私（年龄/收入），多聊兴趣" }
       },
     ]
   },
@@ -102,7 +105,8 @@ export const englishCurriculum = [
         practice: [
           { type: "fill", question: "I love ___ music. (零冠词)", answer: "/", hint: "不需要冠词" },
           { type: "choice", question: "'一个苹果' 英语是?", options: ["a apple", "an apple", "the apple", "some apple"], answer: 1 },
-        ]
+        ],
+        culture: { title: "🇬🇧 英国人的茶文代", content: "英语冠词用法和英国茶文化：\n\n☕ 'a cup of tea' vs 'the tea'：\n- 'I'd like a cup of tea.' (一杯茶 — 不确定哪杯)\n- 'The tea is lovely.' (这茶很好 — 特指正在喝的)\n- 'I love tea.' (我爱茶 — 泛指，零冠词)\n\n🫖 英国茶文化：\n- 英国人年均喝1.9亿杯茶！\n- 'Builder's tea' = 浓茶加奶加糖（工人茶）\n- 'Afternoon tea' = 下午茶（三明治+司康+蛋糕）\n- 'Cream tea' = 德文郡/康沃尔特色（司康+奶油+果酱）\n\n🥛 加奶顺序的历史争论：\n先加奶还是先加茶？这是英国阶级标志！\n先加奶 = 传统工人阶级（怕杯子炸裂）\n先加茶 = 上流社会（瓷器质量好）", tip: "英国人说'I love tea'不加冠词，就像中文说'我爱喝茶'不说'我爱喝那个茶'" }
       },
       {
         id: 'en5', title: "Lesson 5: 可数与不可数名词", goal: "掌握名词的可数性",
@@ -122,7 +126,8 @@ export const englishCurriculum = [
         practice: [
           { type: "choice", question: "'information' 是可数还是不可数?", options: ["可数", "不可数", "都可以", "看情况"], answer: 1 },
           { type: "fill", question: "How ___ water do you need? (多少)", answer: "much", hint: "不可数用much" },
-        ]
+        ],
+        culture: { title: "🇬🇧 英式英语中的量词文化", content: "英国人用量词的方式反映了他们的生活文化：\n\n🍺 英式量词：\n- a pint of beer (一品脱啤酒) — 英式酒吧标准单位\n- a glass of wine (一杯葡萄酒)\n- a cup of tea (一杯茶)\n- a slice of toast (一片吐司)\n\n🏪 英式购物单位：\n- a loaf of bread (一条面包)\n- a bar of chocolate (一块巧克力)\n- a packet of crisps (一包薯片) — 英式叫crisps，美式chips\n- a tin of beans (一罐豆子) — 英式早餐必备\n\n🍽️ 英式vs美式食物词汇：\n- chips(英) = fries(美) 薯条\n- crisps(英) = chips(美) 薯片\n- biscuit(英) = cookie(美) 饼干\n- aubergine(英) = eggplant(美) 茄子\n- courgette(英) = zucchini(美) 西葫芦", tip: "英国酒吧点啤酒说'a pint of'，不说'a glass of'！" }
       },
     ]
   },
@@ -149,7 +154,8 @@ export const englishCurriculum = [
         practice: [
           { type: "fill", question: "She ___ to school every day. (go)", answer: "goes", hint: "三单加-es" },
           { type: "choice", question: "'我正在学习' 英语是?", options: ["I study", "I am studying", "I studies", "I studied"], answer: 1 },
-        ]
+        ],
+        culture: { title: "🇬🇧 英国人的日常作息", content: "英国人的日常作息反映在时态用法中：\n\n🌅 典型英国人的一天：\n- 7:00 I wake up. (一般现在时 — 每天的习惯)\n- 7:30 I'm having a shower. (现在进行时 — 正在做)\n- 8:00 I always have tea for breakfast. (always + 一般现在时)\n- 9:00 I'm starting work now. (现在进行时 — 即将开始)\n\n☕ 英国人的习惯表达：\n- 'I always put milk in my tea first.' (先加奶)\n- 'I usually take the bus to work.' (通常坐公交)\n- 'I never eat chips without salt and vinegar.' (薯条必须加盐和醋)\n\n🗣️ 英式口语中的时态特色：\n- 'I'm having the bus today.' (今天坐公交 — 进行时表计划)\n- 'He's always complaining!' (他总是抱怨！ — always+进行时表抱怨)\n- 'I'm loving this!' (我正在享受！ — 进行时强调感受)", tip: "英国人说'He's always complaining'比'He always complains'更生动！" }
       },
       {
         id: 'en7', title: "Lesson 7: 过去时", goal: "掌握一般过去时和过去进行时",
@@ -170,7 +176,8 @@ export const englishCurriculum = [
         practice: [
           { type: "fill", question: "I ___ (go) to the park yesterday.", answer: "went", hint: "go的过去式" },
           { type: "choice", question: "'我在学习的时候他来了' 怎么表达?", options: ["I studied when he came", "I was studying when he came", "I study when he comes", "I had studied when he came"], answer: 1 },
-        ]
+        ],
+        culture: { title: "🇬🇧 英国人的天气话题", content: "英国人聊天气是国民运动！因为英国天气变化太快：\n\n🌧️ 常用过去时描述天气：\n- 'It was raining all day yesterday.' (昨天下了一整天雨)\n- 'I was walking to work when it started raining.' (我正在走路时开始下雨)\n- 'It rained last week too.' (上周也下雨了)\n\n☔ 英国天气真相：\n- 伦敦年均降雨日106天（但每次雨量不大）\n- 英国人说'It might rain later' = 肯定下雨\n- 天气预报在英国是热门话题\n\n🗣️ 英式天气俚语：\n- 'Lovely day!' = 天气不错（英国人很少说）\n- 'Bit chilly, innit?' = 有点冷（伦敦腔）\n- 'It's chucking it down!' = 大雨倾盆\n- 'It's spitting.' = 毛毛细雨\n- 'Four seasons in one day' = 一天四季（英国天气常态）", tip: "英国人聊天气是社交必备技能，'Nice day'能打开任何话匣子！" }
       },
       {
         id: 'en8', title: "Lesson 8: 将来时", goal: "掌握英语表达将来的多种方式",
@@ -191,7 +198,8 @@ export const englishCurriculum = [
         practice: [
           { type: "fill", question: "I ___ help you. (我会帮你)", answer: "will", hint: "将来时" },
           { type: "choice", question: "'我打算去伦敦' 英语是?", options: ["I will go to London", "I'm going to London", "I go to London", "I went to London"], answer: 1 },
-        ]
+        ],
+        culture: { title: "🇬🇧 英国人的计划与约定", content: "英国人表达将来的方式反映了他们的社交文化：\n\n📅 英国人的社交安排：\n- 'I'm meeting Sarah at 6.' (现在进行时 — 已约好，很确定)\n- 'I'm going to see a film tonight.' (going to — 计划好的)\n- 'I'll probably go to the pub later.' (will — 不确定)\n- 'The match starts at 3.' (一般现在时 — 时刻表)\n\n🍺 英国酒吧文化：\n- 'Shall we go to the pub?' — 英国人社交的核心场所\n- 'It's my treat / It's on me.' — 这轮我请\n- 'Let me get the next one.' — 下轮你请（轮流请客文化）\n- 'Last orders!' — 酒吧最后一轮点单\n\n🗣️ 英式委婉表达将来：\n- 'We should do lunch sometime.' = 可能永远不会约\n- 'I'll bear it in mind.' = 我可能不会做\n- 'That sounds lovely.' = 礼貌同意但不承诺\n- 'We'll have to do that again.' = 客套话，不一定再约", tip: "英国人说'should'经常只是礼貌，不是真正的承诺！" }
       },
     ]
   },
@@ -219,7 +227,8 @@ export const englishCurriculum = [
         practice: [
           { type: "fill", question: "I'll see you ___ Monday. (在周一)", answer: "on", hint: "具体某天用on" },
           { type: "choice", question: "'在2024年' 英语是?", options: ["at 2024", "on 2024", "in 2024", "by 2024"], answer: 2 },
-        ]
+        ],
+        culture: { title: "🇬🇧 英国人的时间观念", content: "英国人的时间观念反映在介词用法中：\n\n📆 英国人的时间表达：\n- 'at the weekend' (英式) vs 'on the weekend' (美式)\n- 'in hospital' (英式) vs 'in the hospital' (美式)\n- 'at half past three' = 3:30（英式报时）\n- 'quarter to four' = 3:45（英式常用）\n\n🕐 英国人的守时文化：\n- 准时 = 提前5分钟到\n- 迟到5分钟 = 可以接受\n- 迟到15分钟以上 = 需要道歉\n- 'Sorry I'm late, the bus was delayed.' (经典借口)\n\n🗓️ 英式节日时间：\n- at Christmas (圣诞节期间)\n- on Christmas Day (圣诞节当天)\n- on New Year's Eve (除夕)\n- on Boxing Day (12月26日，英国特有)\n\n🎄 英国特色节日：\n- Boxing Day = 圣诞节后一天，大打折！\n- Pancake Day = 复活节煎璜日\n- Bonfire Night = 11月5日烟火夜", tip: "英国人很重视守时，迟到要道歉！" }
       },
       {
         id: 'en10', title: "Lesson 10: 地点介词 in/on/at", goal: "掌握地点介词的区别",
@@ -241,7 +250,8 @@ export const englishCurriculum = [
         practice: [
           { type: "fill", question: "I live ___ London. (在伦敦)", answer: "in", hint: "城市用in" },
           { type: "choice", question: "'在公交车上' 英语是?", options: ["in the bus", "on the bus", "at the bus", "by the bus"], answer: 1 },
-        ]
+        ],
+        culture: { title: "🇬🇧 英国地理与交通", content: "英国地点介词反映的地理文化：\n\n🏘️ 英国地址格式：\n- 'I live at 42 Baker Street, in London.' (at=具体地址, in=城市)\n- 'The shop is on the High Street.' (on=街道)\n- 'I'm at the post office.' (at=具体位置)\n\n🚌 英式交通：\n- 'on the bus' (公交上) — 可以走动的用on\n- 'in the car' (车里) — 不能走动的用in\n- 'on the Underground' (伦敦地铁) — 英式叫Underground/Tube\n- 'at the station' (在车站)\n\n🗺️ 英国地理常识：\n- 'in the UK' (在英国)\n- 'in England/Scotland/Wales/Northern Ireland'\n- 'in the Midlands' (在中部)\n- 'in the North/South' (在北方/南方)\n\n🏛️ 英式地标：\n- 'at Big Ben' (在大本钟)\n- 'on the Thames' (在泰晤士河上)\n- 'in Hyde Park' (在海德公园)\n- 'at the British Museum' (在大英博物馆)", tip: "伦敦地铁叫'The Tube'或'Underground'，不叫'subway'！" }
       },
     ]
   },
@@ -271,7 +281,8 @@ export const englishCurriculum = [
         practice: [
           { type: "fill", question: "___ you help me, please? (能)", answer: "Could", hint: "礼貌请求" },
           { type: "choice", question: "'你肯定很累' 英语是?", options: ["You must be tired", "You should be tired", "You can be tired", "You would be tired"], answer: 0 },
-        ]
+        ],
+        culture: { title: "🇬🇧 英国人的礼貌与等级", content: "英国的情态动词反映了深厚的等级文化：\n\n👑 英国人的礼貌层级：\n- 'Could you...?' — 最礼貌（对陌生人/上级）\n- 'Would you mind...?' — 非常礼貌（请求帮忙）\n- 'Can you...?' — 普通礼貌（朋友/同事）\n- 'Give me...' — 不礼貌（除非很熟）\n\n🎩 英国阶级与语言：\n- 'Would you like some tea?' — 上流/正式\n- 'Do you want a cuppa?' — 普通/非正式\n- 'Fancy a brew?' — 非常口语/亲切\n\n🏥 英国NHS就医文化：\n- 'You should see a GP.' (你应该看全科医生)\n- 'I must make an appointment.' (我必须预约)\n- 'You might need a referral.' (你可能需要转诊)\n- NHS = 全民免费医疗，但等很久！\n\n🗣️ 英式委婉请求：\n- 'I'm sorry to bother you, but...' — 非常礼貌\n- 'Would you be so kind as to...' — 极其正式\n- 'If you don't mind...' — 客气", tip: "英国人说'Could you possibly...'比'Can you'礼貌10倍！" }
       },
     ]
   },
@@ -301,7 +312,8 @@ export const englishCurriculum = [
         practice: [
           { type: "fill", question: "Could I ___ a cup of tea, please? (能给我)", answer: "have", hint: "有" },
           { type: "choice", question: "英式'带走'是?", options: ["to go", "to take away", "take out", "carry out"], answer: 1 },
-        ]
+        ],
+        culture: { title: "🇬🇧 英国咖啡馆与下午茶", content: "英国咖啡馆文化比想象中丰富：\n\n☕ 英式咖啡馆 vs 法式咖啡馆：\n- 英式：更随意，自己点单付款，加奶加糖自由选\n- 法式：服务员更正式，通常桌边服务\n\n🫖 英式下午茶传统：\n- 起源：1840年，Bedford公爵夫人Anna发明了下午茶\n- 顺序：手指三明治 → 司康饼(配clotted cream和果酱) → 小蛋糕\n- 茶种：Earl Grey, English Breakfast, Darjeeling\n- 价格：£25-£50/人（伦敦酒店）\n\n🗣️ 咖啡馆点单英语：\n- 'Could I have a flat white, please?' — 澳白（英国最流行）\n- 'I'll have an oat latte.' — 燕麦拿铁\n- 'Can I get that to take away?' — 带走\n- 'Is there Wi-Fi?' — 有无线网吗？\n\n💷 小费文化：\n- 咖啡馆：不需要小费（可留零钱）\n- 餐厅：10-12.5%（已含service charge）\n- 酒吧：不需要小费！", tip: "英国酒吧不需要给小费！这和法国/美国不同" }
       },
       {
         id: 'en13', title: "Lesson 13: 购物", goal: "学会在英式商店购物",
@@ -326,7 +338,8 @@ export const englishCurriculum = [
         practice: [
           { type: "fill", question: "Could I ___ it on? (试穿)", answer: "try", hint: "试" },
           { type: "choice", question: "英式'试衣间'是?", options: ["fitting room", "changing room", "try room", "dressing room"], answer: 1 },
-        ]
+        ],
+        culture: { title: "🇬🇧 英国购物文化", content: "英国购物有一些独特的文化特点：\n\n🛍️ 英式购物场所：\n- 'the High Street' = 主要商业街（英国特色词）\n- 'the charity shop' = 慈善商店（英国独有，二手物品）\n- 'the corner shop' = 街角小店\n- 'the market' = 集市（Camden Market, Borough Market等）\n\n💳 英式购物词汇：\n- 'the till' = 收银台（英式） vs 'the register' (美式)\n- 'a carrier bag' = 购物袋（英式） vs 'a shopping bag' (美式)\n- 'in the sales' = 打折季（1月和7月）\n- 'a bargain' = 便宜货\n\n🎄 英国购物节日：\n- Boxing Day (12月26日) = 年度最大打折日！\n- Black Friday (11月第四个周五) = 美式进口，越来越流行\n- January Sales = 一月打折季\n\n🗣️ 购物对话：\n- 'Do you have this in a size 12?' (英式尺码用数字)\n- 'Can I pay by contactless?' (无接触支付在英国非常普及)\n- 'Would you like a bag? 5p please.' (塑料袋5便士 — 环保税)", tip: "英国塑料袋要收费5p，自带购物袋！" }
       },
     ]
   },
